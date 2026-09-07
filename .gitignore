@@ -1,0 +1,40 @@
+# Virtual environments. Thousands of files, specific to one machine and one
+# Python version, and rebuilt from requirements.txt in seconds. Never commit.
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Piper voice models, ~100 MB each.
+voices/
+
+# Scratch space for the segment WAVs during a build.
+.work/
+
+# Generated audio and cue sheet. The workflow rebuilds these on every run
+# and publishes them straight to Pages, so there is no reason to carry them
+# in git - and bulletin.mp3 would grow the repo by a megabyte a day.
+assets/bed.wav
+assets/intro.wav
+assets/outro.wav
+public/
+preview.html
+
+# Stray test output.
+test.mp3
+*.tmp
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+node_modules/

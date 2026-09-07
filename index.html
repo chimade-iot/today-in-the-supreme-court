@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Today in the Supreme Court</title>
+<meta name="description" content="A daily audio bulletin of the Supreme Court of India, for the legal fraternity. Free, automatically generated, fully credited.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* ------------------------------------------------------------------ *
+   Today in the Supreme Court
+   Ink on paper, with a transmitter lamp. The page is a cause list that
+   happens to be on air: sober type, numbered running order, one warm
+   signal colour reserved entirely for "this is playing now".
+ * ------------------------------------------------------------------ */
+
+:root {
+  /* Light: cool paper, ink, amber lamp. Neutrals carry a blue bias so
+     they belong to the ink rather than reading as unchosen grey. */
+  --paper:      #f2f3f6;
+  --surface:    #ffffff;
+  --surface-2:  #e9ebf0;
+  --ink:        #141824;
+  --ink-2:      #414962;
+  --ink-3:      #6d768f;
+  --rule:       #d3d7e2;
+  --rule-2:     #bfc4d3;
+  --lamp:       #b45309;
+  --lamp-soft:  #f4e4cd;
+  --judgment:   #0f6e63;
+  --shadow:     0 1px 2px rgba(20,24,36,.07), 0 8px 24px -12px rgba(20,24,36,.18);
+  --lamp-glow:  0 0 0 rgba(180,83,9,0);
+  /* The credit strip is a broadcast lower-third: dark in both themes, so
+     it keeps its own tokens rather than borrowing ink/paper, which swap. */
+  --ticker-bg:  #141824;
+  --ticker-fg:  #eaecf2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:      #0d1119;
+    --surface:    #141a25;
+    --surface-2:  #1c2432;
+    --ink:        #eef1f7;
+    --ink-2:      #a8b1c6;
+    --ink-3:      #767f96;
+    --rule:       #252e3e;
+    --rule-2:     #33405480;
+    --lamp:       #e8a33d;
+    --lamp-soft:  #35270f;
+    --judgment:   #3fb3a2;
+    --shadow:     0 1px 2px rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.7);
+    --lamp-glow:  0 0 22px rgba(232,163,61,.28);
+    --ticker-bg:  #1c2432;
+    --ticker-fg:  #eef1f7;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper:      #0d1119;
+  --surface:    #141a25;
+  --surface-2:  #1c2432;
+  --ink:        #eef1f7;
+  --ink-2:      #a8b1c6;
+  --ink-3:      #767f96;
+  --rule:       #252e3e;
+  --rule-2:     #33405480;
+  --lamp:       #e8a33d;
+  --lamp-soft:  #35270f;
+  --judgment:   #3fb3a2;
+  --shadow:     0 1px 2px rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.7);
+  --lamp-glow:  0 0 22px rgba(232,163,61,.28);
+  --ticker-bg:  #1c2432;
+  --ticker-fg:  #eef1f7;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  padding-bottom: 4.5rem;           /* clears the fixed credit ticker */
+}
+
+.wrap {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 4vw, 2.75rem) clamp(1rem, 4vw, 2rem) 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+/* --- masthead ------------------------------------------------------ */
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 2px solid var(--ink);
+}
+
+.brand { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .688rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+h1 {
+  font-family: Newsreader, Georgia, "Times New Roman", serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-size: clamp(1.9rem, 5.5vw, 2.9rem);
+  line-height: 1.05;
+  letter-spacing: -.015em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.edition {
+  display: flex;
+  align-items: center;
+  gap: .875rem;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .75rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The on-air lamp. Dark until the transport is running, and then it is
+   the only saturated thing on the page. */
+.lamp {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .3rem .6rem .3rem .5rem;
+  border: 1px solid var(--rule-2);
+  border-radius: 999px;
+  font-size: .688rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+  transition: color .25s, border-color .25s, background .25s;
+}
+.lamp .bulb {
+  width: .5rem; height: .5rem; border-radius: 50%;
+  background: var(--rule-2);
+  transition: background .25s, box-shadow .25s;
+}
+body.playing .lamp {
+  color: var(--lamp);
+  border-color: color-mix(in srgb, var(--lamp) 45%, transparent);
+  background: var(--lamp-soft);
+}
+body.playing .lamp .bulb {
+  background: var(--lamp);
+  box-shadow: var(--lamp-glow);
+  animation: throb 2.4s ease-in-out infinite;
+}
+@keyframes throb { 0%,100% { opacity: 1 } 50% { opacity: .45 } }
+
+/* --- transport ----------------------------------------------------- */
+
+.transport {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.controls { display: flex; align-items: center; gap: 1.1rem; }
+
+button.play {
+  flex: none;
+  width: 4rem; height: 4rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+  background: var(--ink);
+  color: var(--surface);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform .12s ease, background .2s, border-color .2s;
+}
+button.play:hover { transform: scale(1.04); }
+button.play:active { transform: scale(.97); }
+button.play svg { width: 1.4rem; height: 1.4rem; fill: currentColor; }
+button.play:focus-visible,
+a:focus-visible,
+.row:focus-visible,
+.ghost:focus-visible {
+  outline: 2px solid var(--lamp);
+  outline-offset: 3px;
+}
+
+.nowplaying { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: .25rem; }
+.np-label {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .688rem; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.np-text {
+  font-family: Newsreader, Georgia, serif;
+  font-size: clamp(1rem, 2.4vw, 1.2rem);
+  line-height: 1.3;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+/* VU meter: eight bars driven by the Web Audio analyser. Purely a
+   signal-presence read-out, which is what a studio meter is for. */
+.vu { display: flex; align-items: flex-end; gap: 2px; height: 2rem; flex: none; }
+.vu i {
+  display: block; width: 3px; height: 18%;
+  background: var(--rule-2); border-radius: 1px;
+  transition: height .07s linear, background .2s;
+}
+body.playing .vu i { background: var(--lamp); }
+
+/* --- the running-order scrubber ------------------------------------ */
+/* The bar is the bulletin's shape: one block per item, sized to its
+   real duration, so you can see and reach any story directly. */
+
+.scrub { display: flex; flex-direction: column; gap: .5rem; }
+
+.bar {
+  display: flex;
+  gap: 2px;
+  height: 2.4rem;
+  cursor: pointer;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--surface-2);
+  position: relative;
+}
+.seg {
+  position: relative;
+  background: var(--surface-2);
+  border: none; padding: 0; margin: 0;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background .2s;
+}
+.seg:hover { background: var(--rule); }
+.seg .fill {
+  position: absolute; inset: 0 auto 0 0;
+  width: 0;
+  background: var(--ink);
+  opacity: .18;
+}
+.seg.active .fill { background: var(--lamp); opacity: .32; }
+.seg .num {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .688rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.seg.active .num { color: var(--lamp); font-weight: 500; }
+.seg.bumper .num { font-size: .6rem; letter-spacing: .1em; }
+
+.times {
+  display: flex; justify-content: space-between;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .75rem; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- running order ------------------------------------------------- */
+
+.section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: .5rem;
+}
+h2 {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .75rem; font-weight: 500;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink-2); margin: 0;
+}
+
+ol.order { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+
+.row {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  gap: .25rem 1rem;
+  padding: 1rem .75rem 1rem .5rem;
+  border-bottom: 1px solid var(--rule);
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  transition: background .18s, border-color .18s;
+}
+.row:hover { background: var(--surface); }
+.row.active { border-left-color: var(--lamp); background: var(--surface); }
+
+.row .idx {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .813rem; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  padding-top: .15rem;
+}
+.row.active .idx { color: var(--lamp); }
+
+.row .headline {
+  font-family: Newsreader, Georgia, serif;
+  font-size: 1.06rem; line-height: 1.35; color: var(--ink);
+  text-wrap: pretty;
+}
+.row .meta {
+  grid-column: 2;
+  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem;
+  margin-top: .4rem;
+  font-size: .813rem; color: var(--ink-3);
+}
+.row .meta a { color: var(--ink-2); text-decoration-color: var(--rule-2); text-underline-offset: 2px; }
+.row .meta a:hover { color: var(--lamp); }
+
+.tag {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .625rem; letter-spacing: .1em; text-transform: uppercase;
+  padding: .15rem .4rem; border-radius: 2px;
+  border: 1px solid var(--rule-2); color: var(--ink-3);
+}
+.tag.judgment { color: var(--judgment); border-color: color-mix(in srgb, var(--judgment) 40%, transparent); }
+
+/* With several publishers in one edition, the masthead of each story has
+   to be readable at a glance rather than blending into the metadata. */
+.row .meta .pub { color: var(--ink-2); font-weight: 500; }
+.row.active .meta .pub { color: var(--ink); }
+.cite {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .688rem; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px dotted var(--rule-2);
+}
+
+/* --- sourcing & disclaimer ----------------------------------------- */
+
+.notes {
+  display: grid; gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+}
+.note {
+  border-top: 2px solid var(--rule-2);
+  padding-top: .75rem;
+  font-size: .875rem; color: var(--ink-2);
+  line-height: 1.6;
+}
+.note h3 {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .688rem; font-weight: 500;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-3); margin: 0 0 .4rem;
+}
+.note a { color: var(--ink); text-underline-offset: 2px; }
+.note strong { color: var(--ink); font-weight: 500; }
+
+/* --- the credit ticker --------------------------------------------- */
+/* The brief called for the source to be on screen in real time. When a
+   story is playing this names its publisher outright; between stories it
+   scrolls the full credit list. */
+
+.ticker {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  z-index: 20;
+  background: var(--ticker-bg);
+  color: var(--ticker-fg);
+  border-top: 1px solid var(--ticker-bg);
+  display: flex; align-items: stretch;
+  height: 2.75rem;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .75rem;
+}
+.ticker .tag-label {
+  flex: none;
+  display: flex; align-items: center;
+  padding: 0 .875rem;
+  background: var(--lamp);
+  color: #14100a;
+  letter-spacing: .14em; text-transform: uppercase;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ticker .track { flex: 1; overflow: hidden; display: flex; align-items: center; }
+.ticker .scroll {
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: slide 34s linear infinite;
+}
+.ticker .fixedmsg {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding: 0 1rem;
+}
+@keyframes slide { from { transform: translateX(0) } to { transform: translateX(-100%) } }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+      transition-duration: .001ms !important; }
+  .ticker .scroll { padding-left: 1rem; }
+}
+
+.ghost {
+  background: none; border: 1px solid var(--rule-2); color: var(--ink-2);
+  font: inherit; font-size: .75rem;
+  padding: .3rem .7rem; border-radius: 3px; cursor: pointer;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.ghost:hover { color: var(--ink); border-color: var(--ink-3); }
+
+.empty {
+  padding: 2rem; text-align: center; color: var(--ink-3);
+  border: 1px dashed var(--rule-2); border-radius: 4px;
+}
+
+@media (max-width: 34rem) {
+  .controls { flex-wrap: wrap; }
+  .vu { display: none; }
+  .row { grid-template-columns: 1.75rem 1fr; padding-left: .35rem; }
+  .seg .num { font-size: .625rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="brand">
+      <span class="eyebrow">Daily bulletin &middot; Supreme Court of India</span>
+      <h1>Today in the Supreme Court</h1>
+    </div>
+    <div class="edition">
+      <span class="lamp"><span class="bulb"></span><span id="lampText">Off air</span></span>
+      <span id="editionStamp">&mdash;</span>
+      <button class="ghost" id="themeBtn" type="button" aria-label="Switch colour theme">Theme</button>
+    </div>
+  </header>
+
+  <section class="transport" aria-label="Player">
+    <div class="controls">
+      <button class="play" id="playBtn" type="button" aria-label="Play bulletin">
+        <svg id="playIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <div class="nowplaying">
+        <span class="np-label" id="npLabel">Ready to play</span>
+        <span class="np-text" id="npText">Loading today's bulletin&hellip;</span>
+      </div>
+      <div class="vu" id="vu" aria-hidden="true"></div>
+    </div>
+
+    <div class="scrub">
+      <div class="bar" id="bar" role="group" aria-label="Running order. Select a story to jump to it."></div>
+      <div class="times">
+        <span id="tCur">0:00</span>
+        <span id="tTot">0:00</span>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="Running order">
+    <div class="section-head">
+      <h2>Running order</h2>
+      <span class="eyebrow" id="itemCount"></span>
+    </div>
+    <ol class="order" id="order"></ol>
+  </section>
+
+  <section class="notes" aria-label="Sourcing and disclaimer">
+    <div class="note">
+      <h3>Where this comes from</h3>
+      <p id="sourceNote">Every story in this bulletin is drawn from publicly available reporting and court records, and is credited on air and in the running order above. Headlines link straight back to the publisher.</p>
+    </div>
+    <div class="note">
+      <h3>Please read this</h3>
+      <p><strong>This is not legal advice.</strong> The bulletin is generated automatically from public sources and is not a substitute for the official record. Read the full judgment at the primary source before you rely on any of it. Errors are possible and are ours, not the publishers'.</p>
+    </div>
+    <div class="note">
+      <h3>Credits</h3>
+      <p>Reporting by the publishers named above, each linked to their own page. Music and stings composed for this bulletin and free to reuse. Voice synthesised. Free to listen, no account, no tracking.</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="ticker" role="status" aria-live="polite">
+  <span class="tag-label" id="tickerLabel">Source</span>
+  <div class="track" id="tickerTrack"></div>
+</div>
+
+<audio id="audio" preload="metadata"></audio>
+
+<script>
+(function () {
+  "use strict";
+
+  var audio     = document.getElementById("audio");
+  var playBtn   = document.getElementById("playBtn");
+  var playIcon  = document.getElementById("playIcon");
+  var bar       = document.getElementById("bar");
+  var orderEl   = document.getElementById("order");
+  var npLabel   = document.getElementById("npLabel");
+  var npText    = document.getElementById("npText");
+  var lampText  = document.getElementById("lampText");
+  var tCur      = document.getElementById("tCur");
+  var tTot      = document.getElementById("tTot");
+  var tickerLbl = document.getElementById("tickerLabel");
+  var tickerTrk = document.getElementById("tickerTrack");
+  var vuEl      = document.getElementById("vu");
+
+  var PLAY_PATH  = "M8 5v14l11-7z";
+  var PAUSE_PATH = "M6 5h4v14H6zM14 5h4v14h-4z";
+
+  var data = null;
+  var items = [];        // cues that are actual stories
+  var segs = [];         // scrubber blocks, one per cue
+  var rows = [];         // running-order rows
+  var activeIdx = -1;
+
+  // ---------- helpers ------------------------------------------------
+
+  function fmt(t) {
+    if (!isFinite(t) || t < 0) t = 0;
+    var m = Math.floor(t / 60), s = Math.floor(t % 60);
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function hostOf(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ""); }
+    catch (e) { return ""; }
+  }
+
+  // ---------- build the page from bulletin.json ----------------------
+
+  function render(d) {
+    data = d;
+    var cues = d.cues || [];
+    items = cues.filter(function (c) { return c.kind === "item"; });
+
+    document.getElementById("editionStamp").textContent =
+      d.generated_at_display || "";
+    document.getElementById("itemCount").textContent =
+      items.length + (items.length === 1 ? " story" : " stories");
+    tTot.textContent = fmt(d.duration || 0);
+
+    // -- scrubber: one block per cue, width proportional to its length
+    bar.innerHTML = "";
+    segs = [];
+    var total = d.duration || 1;
+    var itemNo = 0;
+    cues.forEach(function (c, i) {
+      var isItem = c.kind === "item";
+      if (isItem) itemNo++;
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "seg" + (isItem ? "" : " bumper");
+      b.style.flex = Math.max(c.end - c.start, 0.6) + " 0 0";
+      b.title = isItem ? c.headline : (c.kind === "open" ? "Opening" : "Sign-off");
+      b.setAttribute("aria-label",
+        (isItem ? "Story " + itemNo + ": " + c.headline : b.title));
+      b.innerHTML = '<span class="fill"></span><span class="num">' +
+        (isItem ? itemNo : (c.kind === "open" ? "IN" : "OUT")) + "</span>";
+      b.addEventListener("click", function () { seekTo(c.start + 0.05); });
+      bar.appendChild(b);
+      segs.push({ el: b, cue: c, fill: b.querySelector(".fill") });
+    });
+
+    // -- running order
+    orderEl.innerHTML = "";
+    rows = [];
+    items.forEach(function (c, i) {
+      var li = document.createElement("li");
+      li.className = "row";
+      li.tabIndex = 0;
+      li.setAttribute("role", "button");
+      li.setAttribute("aria-label", "Play story " + (i + 1) + ": " + c.headline);
+      var host = hostOf(c.link);
+      li.innerHTML =
+        '<span class="idx">' + String(i + 1).padStart(2, "0") + "</span>" +
+        '<span class="headline">' + esc(c.headline) + "</span>" +
+        '<span class="meta">' +
+          '<span class="tag' + (c.tier === "judgment" ? " judgment" : "") + '">' +
+            (c.tier === "judgment" ? "Judgment" : "Reported") + "</span>" +
+          '<span class="pub">' + esc(c.credit) + "</span>" +
+          (c.citation ? '<span class="cite">' + esc(c.citation) + "</span>" : "") +
+          (c.link ? '<a href="' + esc(c.link) + '" target="_blank" rel="noopener noreferrer">Read at ' + esc(host || "source") + " &rarr;</a>" : "") +
+          "<span>" + fmt(c.start) + "</span>" +
+        "</span>";
+      li.addEventListener("click", function (e) {
+        if (e.target.tagName === "A") return;      // let the link win
+        seekTo(c.start + 0.05, true);
+      });
+      li.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); seekTo(c.start + 0.05, true); }
+      });
+      orderEl.appendChild(li);
+      rows.push({ el: li, cue: c });
+    });
+
+    // -- sourcing note names the actual publishers used today
+    var names = d.sources || [];
+    if (names.length) {
+      document.getElementById("sourceNote").innerHTML =
+        "Today's bulletin draws on <strong>" + esc(names.join(", ")) +
+        "</strong>. Every story is credited on air and linked to the publisher's own page above. " +
+        "Headlines are used for reporting purposes; the bulletin does not reproduce publishers' article text.";
+    }
+
+    // -- ticker default state
+    setTicker("Sources", creditLine(), true);
+
+    audio.src = d.audio || "bulletin.mp3";
+    npLabel.textContent = "Ready to play";
+    npText.textContent = items.length
+      ? items[0].headline
+      : "Bulletin ready.";
+  }
+
+  function setTicker(label, text, scrolling) {
+    tickerLbl.textContent = label;
+    if (scrolling) {
+      // Repeat enough to cover the track without looking like a stutter.
+      var unit = text + "   •   ";
+      var line = unit;
+      while (line.length < 220) line += unit;
+      tickerTrk.innerHTML = '<div class="scroll">' + esc(line) + "</div>";
+    } else {
+      tickerTrk.innerHTML = '<div class="fixedmsg">' + esc(text) + "</div>";
+    }
+  }
+
+  // The standing credit line, shown whenever no single story is on air.
+  function creditLine() {
+    var names = (data && data.sources) || [];
+    var parts = [];
+    if (names.length) parts.push("Reporting by " + names.join(", "));
+    parts.push("Every story linked to its publisher in the running order");
+    parts.push("Automatically generated · not legal advice");
+    parts.push("Read the full judgment at the primary source");
+    return parts.join("   •   ");
+  }
+
+  // ---------- transport ----------------------------------------------
+
+  function seekTo(t, autoplay) {
+    audio.currentTime = t;
+    if (autoplay !== false && audio.paused) play();
+    sync();
+  }
+
+  function play() {
+    var p = audio.play();
+    if (p && p.catch) p.catch(function () { /* autoplay blocked; ignore */ });
+  }
+
+  playBtn.addEventListener("click", function () {
+    if (audio.paused) play(); else audio.pause();
+  });
+
+  audio.addEventListener("play", function () {
+    document.body.classList.add("playing");
+    playIcon.innerHTML = '<path d="' + PAUSE_PATH + '"></path>';
+    playBtn.setAttribute("aria-label", "Pause bulletin");
+    lampText.textContent = "On air";
+    startMeter();
+  });
+
+  audio.addEventListener("pause", function () {
+    document.body.classList.remove("playing");
+    playIcon.innerHTML = '<path d="' + PLAY_PATH + '"></path>';
+    playBtn.setAttribute("aria-label", "Play bulletin");
+    lampText.textContent = "Paused";
+    resetMeter();
+  });
+
+  audio.addEventListener("ended", function () {
+    lampText.textContent = "Off air";
+    npLabel.textContent = "Bulletin ends";
+    npText.textContent = "That's the edition. Links to every story are above.";
+    setTicker("Sources", creditLine(), true);
+  });
+
+  audio.addEventListener("loadedmetadata", function () {
+    if (isFinite(audio.duration)) tTot.textContent = fmt(audio.duration);
+  });
+
+  audio.addEventListener("timeupdate", sync);
+
+  bar.addEventListener("click", function (e) {
+    if (e.target.closest(".seg")) return;   // segment handles its own click
+    var r = bar.getBoundingClientRect();
+    seekTo(((e.clientX - r.left) / r.width) * (audio.duration || 0));
+  });
+
+  function sync() {
+    var t = audio.currentTime;
+    tCur.textContent = fmt(t);
+
+    var found = -1;
+    segs.forEach(function (s, i) {
+      var span = Math.max(s.cue.end - s.cue.start, 0.001);
+      var pct = (t - s.cue.start) / span;
+      s.fill.style.width = Math.max(0, Math.min(1, pct)) * 100 + "%";
+      if (t >= s.cue.start && t < s.cue.end) found = i;
+      s.el.classList.toggle("active", t >= s.cue.start && t < s.cue.end);
+    });
+
+    if (found === activeIdx) return;
+    activeIdx = found;
+
+    var cue = found >= 0 ? segs[found].cue : null;
+    rows.forEach(function (r) { r.el.classList.toggle("active", cue && r.cue === cue); });
+
+    if (!cue) return;
+    if (cue.kind === "item") {
+      npLabel.textContent = "Now playing · " + cue.credit;
+      npText.textContent = cue.headline;
+      setTicker("Source", cue.credit + (hostOf(cue.link) ? "  ·  " + hostOf(cue.link) : "") +
+        "  ·  Reported by " + cue.credit + ", linked in full in the running order", false);
+    } else {
+      npLabel.textContent = cue.kind === "open" ? "Opening" : "Sign-off";
+      npText.textContent = cue.kind === "open"
+        ? "Today in the Supreme Court"
+        : "Read the full judgment at the primary source before relying on it.";
+      setTicker("Sources", creditLine(), true);
+    }
+  }
+
+  // ---------- VU meter ------------------------------------------------
+
+  var ctx = null, analyser = null, freq = null, bars = [], raf = 0;
+  for (var i = 0; i < 8; i++) { var b = document.createElement("i"); vuEl.appendChild(b); bars.push(b); }
+
+  function startMeter() {
+    try {
+      if (!ctx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        ctx = new AC();
+        var src = ctx.createMediaElementSource(audio);
+        analyser = ctx.createAnalyser();
+        analyser.fftSize = 64;
+        analyser.smoothingTimeConstant = 0.75;
+        src.connect(analyser);
+        analyser.connect(ctx.destination);
+        freq = new Uint8Array(analyser.frequencyBinCount);
+      }
+      if (ctx.state === "suspended") ctx.resume();
+      cancelAnimationFrame(raf);
+      tick();
+    } catch (e) { /* meter is decorative; never break playback for it */ }
+  }
+
+  function tick() {
+    if (!analyser) return;
+    analyser.getByteFrequencyData(freq);
+    for (var i = 0; i < bars.length; i++) {
+      var v = freq[i + 1] / 255;
+      bars[i].style.height = Math.max(15, Math.min(100, 15 + v * 105)) + "%";
+    }
+    raf = requestAnimationFrame(tick);
+  }
+
+  function resetMeter() {
+    cancelAnimationFrame(raf);
+    bars.forEach(function (b) { b.style.height = "15%"; });
+  }
+
+  // ---------- theme toggle ---------------------------------------------
+
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var cur = document.documentElement.getAttribute("data-theme");
+    var dark = cur ? cur === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+  });
+
+  // ---------- keyboard --------------------------------------------------
+
+  document.addEventListener("keydown", function (e) {
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    if (e.key === " " || e.key === "k") {
+      e.preventDefault();
+      if (audio.paused) play(); else audio.pause();
+    } else if (e.key === "ArrowRight") {
+      audio.currentTime = Math.min((audio.duration || 0), audio.currentTime + 10);
+    } else if (e.key === "ArrowLeft") {
+      audio.currentTime = Math.max(0, audio.currentTime - 10);
+    } else if (e.key === "n" || e.key === "ArrowDown") {
+      e.preventDefault();
+      var nxt = items.find(function (c) { return c.start > audio.currentTime + 0.4; });
+      if (nxt) seekTo(nxt.start + 0.05);
+    } else if (e.key === "p" || e.key === "ArrowUp") {
+      e.preventDefault();
+      var prevs = items.filter(function (c) { return c.start < audio.currentTime - 1.2; });
+      if (prevs.length) seekTo(prevs[prevs.length - 1].start + 0.05);
+    }
+  });
+
+  // ---------- boot -------------------------------------------------------
+
+  if (window.__BULLETIN__) {
+    render(window.__BULLETIN__);
+  } else {
+    fetch("bulletin.json", { cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(render)
+      .catch(function () {
+        npLabel.textContent = "No bulletin yet";
+        npText.textContent = "Run the builder to produce today's edition.";
+        orderEl.innerHTML =
+          '<li class="empty">No <code>bulletin.json</code> found. ' +
+          "Run <code>python3 build_bulletin.py</code> and reload.</li>";
+        setTicker("Standby", "Awaiting the next transmission", true);
+      });
+  }
+})();
+</script>
+</body>
+</html>

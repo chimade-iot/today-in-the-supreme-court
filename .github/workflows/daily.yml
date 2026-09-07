@@ -1,0 +1,74 @@
+name: Build and publish the daily bulletin
+
+on:
+  schedule:
+    # Cron here is UTC. These are 07:30 and 18:30 IST.
+    - cron: "0 2 * * 1-6"
+    - cron: "0 13 * * 1-6"
+  workflow_dispatch:          # lets you build on demand from the Actions tab
+  push:
+    branches: [main]
+    paths:
+      - "build_bulletin.py"
+      - "sources.py"
+      - "make_bed.py"
+      - "index.html"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: bulletin
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Synthesise the music bed
+        run: python3 make_bed.py
+
+      - name: Report which sources are alive
+        continue-on-error: true
+        run: python3 build_bulletin.py --check-sources
+
+      - name: Build the bulletin
+        run: python3 build_bulletin.py --max-items 8
+
+      - name: Show what was produced
+        run: |
+          ls -la public/
+          python3 -c "import json;d=json.load(open('public/bulletin.json'));print(d['item_count'],'items,',d['duration'],'seconds, engine',d['engine'])"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
