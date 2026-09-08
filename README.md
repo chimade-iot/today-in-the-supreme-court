@@ -47,6 +47,10 @@ Useful flags:
 | `build_bulletin.py --max-items 5` | shorter edition |
 | `build_bulletin.py --per-source 2` | cap any one publisher at two items |
 | `make_preview.py` | fold everything into one shareable `preview.html` |
+| `podcast.py episode` | package the current build as an episode |
+| `podcast.py feed` | regenerate `feed.xml` from the release archive |
+| `podcast.py check` | validate the feed against the podcast spec |
+| `make_cover.py` | redraw the podcast cover art |
 
 ## Deploying
 
@@ -99,6 +103,82 @@ Nothing here is sampled or borrowed, so there is no third-party music
 licence to track and nothing to attribute. Change the key, tempo or
 instrumentation at the top of `make_bed.py`.
 
+## The podcast feed
+
+Every build is also published as a podcast episode, so people can
+subscribe in any app instead of remembering to open the page.
+
+```
+build_bulletin.py ──▶ public/bulletin.mp3
+                              │
+      podcast.py episode ─────┤  dated MP3 + show notes + metadata
+                              ▼
+              GitHub Release  ep-20260907-1224     ← the archive
+                              │
+      podcast.py feed  ◀──────┘  reads every ep-* release back
+                              ▼
+                      public/feed.xml
+```
+
+### Where episodes live, and why it matters
+
+The site is rebuilt from scratch every run and `public/` is replaced
+wholesale, so anything written there is gone by the next edition. A
+podcast cannot work that way: the feed points at episodes by URL, and
+those URLs have to keep working for as long as the episode is listed.
+An app that gets a 404 shows a broken episode; one that sees a changed
+URL re-downloads it.
+
+Three options, and why this one:
+
+| Where | Verdict |
+|---|---|
+| Committed to the repo | Durable, but two editions a day at ~1.5 MB is about a gigabyte a year of binaries in git history, unprunable without rewriting history. **No.** |
+| Carried forward from the live site | No repo growth, but the archive exists only in the last successful deploy, so one bad run destroys it. **No.** |
+| **GitHub Releases** | Permanent URLs, free on public repos, no repo growth — and the release list *is* the archive, so the feed regenerates from GitHub rather than from a state file that could drift. **Yes.** |
+
+Because the archive is GitHub's release list, a rebuild from an empty
+checkout produces an identical feed. There is no state to lose.
+
+If the GitHub API is unreachable, `podcast.py feed` **fails the build
+rather than writing an empty feed** — an empty feed would unpublish every
+episode from every subscriber's app. A failed build leaves the previous
+deploy serving, which is the safe outcome.
+
+### Before you submit it anywhere
+
+Set `email` in `podcast.json`. Apple Podcasts will not let you claim a
+show without a contact address on the feed, and `podcast.py check` warns
+while it is blank.
+
+```bash
+python3 podcast.py episode   # package the current build
+python3 podcast.py feed      # regenerate feed.xml from the releases
+python3 podcast.py check     # validate against the podcast spec
+```
+
+`check` verifies what Apple and Spotify actually require: an
+`itunes:image`, a category, and per episode an enclosure with a real byte
+length, a unique GUID and a `pubDate`.
+
+### Cover art
+
+`make_cover.py` draws the 2000×2000 cover with PIL — the transmitter lamp
+and signal arcs over the Court's name, in the site's palette. Run it once
+and commit `assets/cover.png`; it never changes between editions, so the
+build just copies it and never depends on a font being installed on the
+runner. It was checked for legibility at 55 pixels, which is how most
+people first see it.
+
+### Listing on Apple and Spotify
+
+Both index a show once, from its feed URL, and pull new episodes
+automatically after that. Submit at
+[podcastsconnect.apple.com](https://podcastsconnect.apple.com/) and
+[podcasters.spotify.com](https://podcasters.spotify.com/). Everything
+else — Pocket Casts, Overcast, AntennaPod, Castro — takes the feed URL
+directly with no submission at all.
+
 ## Sources, and the copyright line this project draws
 
 Sources sit in two tiers and the pipeline treats them differently on
@@ -145,15 +225,72 @@ beside each story.
 If you add a source, set its `tier` honestly in `sources.py`. The script
 generator enforces the distinction.
 
-### A live caveat on Indian Kanoon
+### One classifier, not one per adapter
 
-Indian Kanoon publishes per-court RSS feeds and the Supreme Court one is
-the natural spine for this project. **At the time of writing it returns
-valid RSS with zero items**, while the all-courts `judgments` feed is
-healthy. The pipeline therefore keeps the SC feed first in the chain, falls
-through to the all-courts feed filtered to Supreme Court matters, and then
-to the news publishers. Run `--check-sources` before assuming any of them
-works today.
+`which_court()` in `sources.py` is the only thing that decides whether a
+story belongs in the bulletin, and every adapter goes through it. That
+centralisation is the fix for a real escape: when adapters filtered for
+themselves the rules drifted, and a Karnataka High Court order reached air
+because only one adapter checked for High Courts.
+
+The rules, in order:
+
+1. If the **headline** names the Supreme Court, it is ours — including
+   "Supreme Court criticises AP High Court", which names both.
+2. Otherwise, if the headline names a High Court, it is not.
+3. Only if the headline names no court at all does the article URL, and
+   then the feed it came from, get a say.
+
+A publisher's Supreme Court feed is the *weakest* signal, not the
+strongest. Verdictum's SC feed carried a Karnataka High Court story;
+trusting the feed's name over the headline is what let it through.
+
+Two smaller things this fixed. Court names are matched after collapsing
+hyphens and underscores to spaces, so `/supreme-court/` in a URL actually
+matches — previously the URL argument was silently doing nothing, because
+the pattern wanted a space. And `HC` is now recognised as well as "High
+Court", so "Delhi HC Grants Interim Relief" is caught.
+
+### Why Indian Kanoon is switched off
+
+Indian Kanoon looks like the natural spine for this project — actual
+judgments, and section 52(1)(q) means they can be summarised freely. It
+does not work out, and the reason is worth recording so nobody re-adds it
+hopefully.
+
+Its per-court Supreme Court feeds return valid RSS with **zero entries**.
+Its all-courts `judgments` feed does work, with around 20 entries, but the
+entries carry no court **anywhere**:
+
+```
+title   : Harendra vs The State Of Madhya Pradesh Thr on 20 August, 2026
+link    : https://indiankanoon.org/doc/3557904/
+fields  : guidislink, id, link, links, summary, summary_detail, title, title_detail
+summary : Per Justice G.S. Ahluwalia 1. By this common judgment, Cr.A. Nos. ...
+```
+
+No court in the title, none in the URL, and no category or tag fields at
+all. The only court signal is inside the judgment text — and that is
+exactly the signal that cannot be trusted, because virtually every
+judgment cites the Supreme Court somewhere. Running the filter across that
+feed passed **one entry out of twenty, and that one was a High Court
+judgment citing a Supreme Court precedent**.
+
+A bulletin that announces High Court cases as Supreme Court judgments is
+worse than one with no judgment-tier source at all, so the adapters stay in
+`sources.py` — importable, listed in `DISABLED` — but out of the rotation.
+
+**This is why `_is_supreme_court()` reads the headline and URL only, never
+the article body.** Publishers put the court in the headline; judgment text
+mentions every court it cites.
+
+To bring judgment-tier content back, in rough order of effort:
+
+- **Indian Kanoon's authenticated API**, which does expose the court as a
+  field rather than leaving it to be guessed.
+- **eSCR / Digital Supreme Court Reports** at digiscr.sci.gov.in.
+- **Resolving each Indian Kanoon doc page** to read its court, at one extra
+  request per item.
 
 The Supreme Court's own judgment search at sci.gov.in sits behind a CAPTCHA
 and is deliberately not scraped.
@@ -177,8 +314,12 @@ build_bulletin.py     pipeline: fetch, script, voice, mix
 sources.py            source adapters and the tier rules
 make_bed.py           synthesises bed.wav, intro.wav, outro.wav
 make_preview.py       folds a build into one shareable HTML file
+podcast.py            episodes, the RSS feed, and feed validation
+make_cover.py         draws the podcast cover art
+diagnose_feeds.py     shows what each feed contains and how it classifies
 index.html            the player
 sample_items.json     real items, for offline builds
+podcast.json          feed config: owner, repo, site, contact email
 public/               what gets deployed
 ```
 

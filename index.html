@@ -287,6 +287,71 @@ body.playing .vu i { background: var(--lamp); }
   font-variant-numeric: tabular-nums;
 }
 
+/* --- subscribe ------------------------------------------------------ */
+/* Second only to the play button: the site is how you hear today's
+   edition, the feed is how you stop having to remember to. */
+
+.subscribe {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 1.25rem;
+  align-items: start;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: clamp(1rem, 3vw, 1.4rem);
+}
+.subscribe img.art {
+  width: 5.5rem; height: 5.5rem;
+  border-radius: 3px;
+  border: 1px solid var(--rule-2);
+  grid-row: span 2;
+}
+.sub-head { display: flex; flex-direction: column; gap: .2rem; margin-bottom: .8rem; }
+.sub-head h2 { border: 0; padding: 0; }
+.sub-head p {
+  margin: 0; font-size: .938rem; color: var(--ink-2); max-width: 46ch;
+  line-height: 1.5;
+}
+.feedrow { display: flex; flex-wrap: wrap; gap: .5rem; align-items: stretch; }
+.feedurl {
+  flex: 1 1 22rem; min-width: 0;
+  display: flex; align-items: center;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .813rem;
+  padding: .5rem .7rem;
+  background: var(--surface-2);
+  border: 1px solid var(--rule-2);
+  border-radius: 3px;
+  color: var(--ink-2);
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  user-select: all;
+}
+.btn {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .75rem; letter-spacing: .08em; text-transform: uppercase;
+  padding: .55rem .9rem; border-radius: 3px; cursor: pointer;
+  border: 1px solid var(--ink); background: var(--ink); color: var(--surface);
+  text-decoration: none; display: inline-flex; align-items: center;
+  white-space: nowrap;
+  transition: opacity .15s;
+}
+.btn:hover { opacity: .85; }
+.btn.secondary { background: none; color: var(--ink-2); border-color: var(--rule-2); }
+.btn.secondary:hover { color: var(--ink); border-color: var(--ink-3); }
+.btn:focus-visible { outline: 2px solid var(--lamp); outline-offset: 3px; }
+.sub-note {
+  grid-column: 2;
+  margin: .7rem 0 0; font-size: .813rem; color: var(--ink-3); line-height: 1.5;
+}
+.sub-note a { color: var(--ink-2); }
+
+@media (max-width: 34rem) {
+  .subscribe { grid-template-columns: 1fr; gap: .9rem; }
+  .subscribe img.art { width: 4rem; height: 4rem; grid-row: auto; }
+  .sub-note { grid-column: 1; }
+}
+
 /* --- running order ------------------------------------------------- */
 
 .section-head {
@@ -480,6 +545,28 @@ ol.order { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
         <span id="tTot">0:00</span>
       </div>
     </div>
+  </section>
+
+  <section class="subscribe" aria-label="Subscribe">
+    <img class="art" id="coverArt" src="cover-600.png" alt="" width="600" height="600">
+    <div>
+      <div class="sub-head">
+        <h2>Subscribe</h2>
+        <p>New edition twice each weekday. Add the feed to any podcast app and it arrives on its own &mdash; no need to remember this page.</p>
+      </div>
+      <div class="feedrow">
+        <span class="feedurl" id="feedUrl">feed.xml</span>
+        <button class="btn" id="copyFeed" type="button">Copy</button>
+        <a class="btn secondary" id="openApp" href="#">Open in app</a>
+      </div>
+    </div>
+    <p class="sub-note">
+      Most apps &mdash; Pocket Casts, Overcast, AntennaPod, Castro &mdash; take the feed URL directly.
+      <a href="https://podcastsconnect.apple.com/" target="_blank" rel="noopener noreferrer">Apple Podcasts</a>
+      and
+      <a href="https://podcasters.spotify.com/" target="_blank" rel="noopener noreferrer">Spotify</a>
+      list a show once it has been submitted there, which only needs doing once.
+    </p>
   </section>
 
   <section aria-label="Running order">
@@ -826,6 +913,57 @@ ol.order { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
       if (prevs.length) seekTo(prevs[prevs.length - 1].start + 0.05);
     }
   });
+
+  // ---------- subscribe -------------------------------------------------
+
+  (function subscribe() {
+    var out = document.getElementById("feedUrl");
+    var copy = document.getElementById("copyFeed");
+    var open = document.getElementById("openApp");
+    var art = document.getElementById("coverArt");
+    if (!out) return;
+
+    var url;
+    try {
+      url = new URL("feed.xml", location.href).href;
+    } catch (e) { url = "feed.xml"; }
+
+    if (location.protocol === "file:") {
+      // Opened straight off disk, so there is no real address to hand out.
+      out.textContent = "publish the site to get the feed address";
+      copy.disabled = true;
+      open.style.display = "none";
+    } else {
+      out.textContent = url;
+      // Most podcast apps register the podcast:// scheme and will take the
+      // feed straight from the browser.
+      open.href = "podcast://" + url.replace(/^https?:\/\//, "");
+    }
+
+    // The cover is only there once the feed has been generated.
+    art.addEventListener("error", function () { art.style.display = "none"; });
+
+    copy.addEventListener("click", function () {
+      var done = function () {
+        var was = copy.textContent;
+        copy.textContent = "Copied";
+        setTimeout(function () { copy.textContent = was; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done, fallback);
+      } else {
+        fallback();
+      }
+      function fallback() {
+        var r = document.createRange();
+        r.selectNodeContents(out);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(r);
+        try { document.execCommand("copy"); done(); } catch (e) { /* selected at least */ }
+      }
+    });
+  })();
 
   // ---------- boot -------------------------------------------------------
 

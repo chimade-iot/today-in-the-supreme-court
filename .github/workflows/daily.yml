@@ -6,16 +6,23 @@ on:
     - cron: "0 2 * * 1-6"
     - cron: "0 13 * * 1-6"
   workflow_dispatch:          # lets you build on demand from the Actions tab
+    inputs:
+      publish_episode:
+        description: "Publish this build as a podcast episode"
+        type: boolean
+        default: true
   push:
     branches: [main]
     paths:
       - "build_bulletin.py"
       - "sources.py"
       - "make_bed.py"
+      - "podcast.py"
+      - "podcast.json"
       - "index.html"
 
 permissions:
-  contents: read
+  contents: write             # needed to create the episode release
   pages: write
   id-token: write
 
@@ -56,6 +63,44 @@ jobs:
         run: |
           ls -la public/
           python3 -c "import json;d=json.load(open('public/bulletin.json'));print(d['item_count'],'items,',d['duration'],'seconds, engine',d['engine'])"
+
+      # --- podcast ------------------------------------------------------
+      # Each edition is published as a GitHub Release: the assets are
+      # permanent and free, so the release list becomes the episode
+      # archive and the feed can always be regenerated from it.
+
+      - name: Package the episode
+        id: episode
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.publish_episode }}
+        run: python3 podcast.py episode
+
+      - name: Publish the episode release
+        if: ${{ steps.episode.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.episode.outputs.tag }}
+          TITLE: ${{ steps.episode.outputs.title }}
+          FILE: ${{ steps.episode.outputs.file }}
+          NOTES: ${{ steps.episode.outputs.notes }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            # Re-running the same build should update the episode, not fail.
+            echo "Release $TAG exists; updating it."
+            gh release edit "$TAG" --title "$TITLE" --notes-file "$NOTES"
+            gh release upload "$TAG" "$FILE" --clobber
+          else
+            gh release create "$TAG" "$FILE" --title "$TITLE" --notes-file "$NOTES"
+          fi
+
+      - name: Build the podcast feed
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python3 podcast.py feed
+          python3 podcast.py check
+
+      - name: Show the deployable site
+        run: ls -la public/
 
       - uses: actions/configure-pages@v5
 
