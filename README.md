@@ -48,7 +48,8 @@ Useful flags:
 | `build_bulletin.py --per-source 2` | cap any one publisher at two items |
 | `make_preview.py` | fold everything into one shareable `preview.html` |
 | `podcast.py episode` | package the current build as an episode |
-| `podcast.py feed` | regenerate `feed.xml` from the release archive |
+| `podcast.py feed` | mirror recent episodes onto the site and regenerate `feed.xml` |
+| `podcast.py feed --window 60` | host and list 60 editions instead of 30 |
 | `podcast.py check` | validate the feed against the podcast spec |
 | `make_cover.py` | redraw the podcast cover art |
 
@@ -140,6 +141,45 @@ Three options, and why this one:
 Because the archive is GitHub's release list, a rebuild from an empty
 checkout produces an identical feed. There is no state to lose.
 
+### But the feed must not point at Releases
+
+Release assets are the archive, **not** the URLs the feed advertises. This
+was found the hard way: the feed played fine in browsers and on Windows,
+while Apple Podcasts answered *"this episode can't be played on this
+device."* GitHub serves release assets like this:
+
+```
+Content-Type: application/octet-stream        ← not audio/mpeg
+Content-Disposition: attachment               ← "download me, don't play me"
+Location: ...?se=2026-09-08T07:38:52Z         ← signed, expires within the hour
+```
+
+Browsers ignore all three and play the file anyway, which is exactly why
+the fault looked like an Apple quirk rather than a server one. Podcast
+apps check the content type, and `application/octet-stream` is not audio.
+None of it is configurable — Releases is a software-distribution endpoint,
+not a media host.
+
+So the two jobs are split:
+
+- **GitHub Releases — the archive.** Permanent, free, never lost. Every
+  edition ever published, with its running order, at a stable page.
+- **GitHub Pages — the serving layer.** Plain static hosting, so `.mp3`
+  goes out as `audio/mpeg`, inline, from a permanent URL, with byte
+  ranges so apps can seek.
+
+`podcast.py feed` mirrors the most recent editions out of Releases into
+`public/episodes/` and points the enclosures there. The feed lists exactly
+what the site is hosting, so no listed episode can 404. An episode that
+fails to mirror is dropped from the feed rather than advertised with a URL
+that would not play.
+
+`--window` controls how many editions are hosted and listed, default 30 —
+about a fortnight at two a day, roughly 70 MB. Older editions stay in
+Releases and remain downloadable from their release page forever; they
+simply stop appearing in podcast apps, which is normal for a daily news
+show.
+
 If the GitHub API is unreachable, `podcast.py feed` **fails the build
 rather than writing an empty feed** — an empty feed would unpublish every
 episode from every subscriber's app. A failed build leaves the previous
@@ -171,6 +211,11 @@ runner. It was checked for legibility at 55 pixels, which is how most
 people first see it.
 
 ### Listing on Apple and Spotify
+
+Set `spotify` (and later `apple`) in `podcast.json` and the site shows a
+"Listen on Spotify" button automatically — `podcast.py feed` writes those
+into `public/links.json`, which the player reads, so adding a platform
+never means editing `index.html`.
 
 Both index a show once, from its feed URL, and pull new episodes
 automatically after that. Submit at

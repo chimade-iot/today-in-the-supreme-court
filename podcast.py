@@ -84,6 +84,9 @@ DEFAULTS = {
     "category": "News",
     "subcategory": "Daily News",
     "explicit": "false",
+    # Where the show is listed, for the site to link out to. Optional.
+    "spotify": "",
+    "apple": "",
     # Filled in from GITHUB_REPOSITORY when running in Actions.
     "owner": "",
     "repo": "",
@@ -380,14 +383,75 @@ def build_feed(cfg: dict, episodes: list[dict]) -> str:
     return head + "\n".join(body) + "\n  </channel>\n</rss>\n"
 
 
-def write_feed(cfg: dict, limit: int) -> Path:
+def mirror_to_pages(cfg: dict, episodes: list[dict], out_dir: Path) -> list[dict]:
+    """
+    Copy each episode's audio onto the site, and repoint the feed at it.
+
+    Release assets cannot be used as podcast enclosures. GitHub serves them
+    as Content-Type: application/octet-stream with Content-Disposition:
+    attachment, behind a signed URL that expires within the hour. Browsers
+    ignore all of that and play the file anyway - which is why the feed
+    worked in Safari and on Windows but Apple Podcasts answered "this
+    episode can't be played on this device". Podcast apps check the content
+    type, and octet-stream is not audio.
+
+    GitHub Pages is plain static hosting: .mp3 goes out as audio/mpeg,
+    inline, from a permanent URL, with byte ranges so apps can seek.
+
+    So Releases stays the archive - durable, free, never lost - and the
+    site becomes the serving layer for the episodes currently listed. An
+    episode that cannot be mirrored is dropped from the feed rather than
+    listed with a URL that would fail in someone's player.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    site = cfg["site"].rstrip("/") + "/"
+    kept = []
+
+    for ep in episodes:
+        name = ep["url"].rsplit("/", 1)[-1].split("?")[0]
+        dest = out_dir / name
+        if not dest.exists() or dest.stat().st_size != ep["bytes"]:
+            try:
+                with requests.get(ep["url"], stream=True, timeout=120) as r:
+                    r.raise_for_status()
+                    with open(dest, "wb") as fh:
+                        for chunk in r.iter_content(1 << 16):
+                            fh.write(chunk)
+            except Exception as e:
+                print(f"  ! could not mirror {ep['tag']}: {e}")
+                print(f"    dropping it from the feed rather than listing a "
+                      f"URL that would not play")
+                dest.unlink(missing_ok=True)
+                continue
+
+        size = dest.stat().st_size
+        if size == 0:
+            print(f"  ! {ep['tag']} mirrored empty; dropping")
+            dest.unlink(missing_ok=True)
+            continue
+
+        ep = dict(ep)
+        ep["url"] = f"{site}episodes/{name}"
+        ep["bytes"] = size           # trust the file we are actually serving
+        ep["archive"] = ep.get("url")
+        kept.append(ep)
+
+    return kept
+
+
+def write_feed(cfg: dict, window: int) -> Path:
     require(cfg, "owner", "repo", "site")
     releases = fetch_releases(cfg)
     episodes = [e for e in (parse_release(r) for r in releases) if e]
     episodes.sort(key=lambda e: e["published"], reverse=True)
-    episodes = episodes[:limit]
+
+    # The feed lists exactly what the site is hosting, so nothing in it can
+    # 404. Older editions stay in Releases and remain downloadable there.
+    episodes = episodes[:window]
 
     PUBLIC.mkdir(exist_ok=True)
+    episodes = mirror_to_pages(cfg, episodes, PUBLIC / "episodes")
+
     xml = build_feed(cfg, episodes)
     out = PUBLIC / "feed.xml"
     out.write_text(xml, encoding="utf-8")
@@ -397,7 +461,15 @@ def write_feed(cfg: dict, limit: int) -> Path:
         if src.exists():
             shutil.copy2(src, PUBLIC / name)
 
-    print(f"{out}  ({len(episodes)} episode(s))")
+    # Where else the show can be listened to, for the site to link out to.
+    links = {k: cfg.get(k, "") for k in ("spotify", "apple", "youtube")
+             if cfg.get(k)}
+    links["feed"] = cfg["site"].rstrip("/") + "/feed.xml"
+    (PUBLIC / "links.json").write_text(json.dumps(links, indent=2),
+                                       encoding="utf-8")
+
+    total = sum(e["bytes"] for e in episodes) / 1_048_576
+    print(f"{out}  ({len(episodes)} episode(s), {total:.1f} MB hosted)")
     for e in episodes[:5]:
         print(f"  {e['published'].strftime('%Y-%m-%d %H:%M')}  "
               f"{fmt_duration(e['duration']):>7}  {e['title']}")
@@ -499,8 +571,10 @@ def main() -> None:
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("episode", help="package the current build for release")
     f = sub.add_parser("feed", help="write public/feed.xml from GitHub Releases")
-    f.add_argument("--limit", type=int, default=60,
-                   help="how many recent episodes to list (default 60)")
+    f.add_argument("--window", type=int, default=30,
+                   help="how many recent episodes the site hosts and the "
+                        "feed lists (default 30). Older editions stay in "
+                        "Releases and remain downloadable there.")
     sub.add_parser("check", help="validate public/feed.xml")
 
     args = ap.parse_args()
@@ -509,7 +583,7 @@ def main() -> None:
     if args.cmd == "episode":
         make_episode(cfg)
     elif args.cmd == "feed":
-        write_feed(cfg, args.limit)
+        write_feed(cfg, args.window)
     elif args.cmd == "check":
         sys.exit(check_feed(cfg))
 

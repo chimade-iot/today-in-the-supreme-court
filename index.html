@@ -337,6 +337,12 @@ body.playing .vu i { background: var(--lamp); }
   transition: opacity .15s;
 }
 .btn:hover { opacity: .85; }
+.btn.spotify {
+  background: #1db954; border-color: #1db954; color: #06180d;
+  font-weight: 500;
+}
+.btn.spotify svg { width: 1rem; height: 1rem; margin-right: .45rem; fill: currentColor; }
+.btn.spotify:hover { opacity: .9; }
 .btn.secondary { background: none; color: var(--ink-2); border-color: var(--rule-2); }
 .btn.secondary:hover { color: var(--ink); border-color: var(--ink-3); }
 .btn:focus-visible { outline: 2px solid var(--lamp); outline-offset: 3px; }
@@ -555,6 +561,11 @@ ol.order { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
         <p>New edition twice each weekday. Add the feed to any podcast app and it arrives on its own &mdash; no need to remember this page.</p>
       </div>
       <div class="feedrow">
+        <a class="btn spotify" id="spotifyLink" href="#" target="_blank"
+           rel="noopener noreferrer" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="10.2" fill="currentColor" stroke="none"/><path d="M6.9 9.2c3.5-1 7.4-.6 10.3 1.1" stroke="#1db954"/><path d="M7.6 12.4c2.9-.8 6.1-.5 8.5 1" stroke="#1db954"/><path d="M8.3 15.5c2.3-.6 4.8-.4 6.7.8" stroke="#1db954"/></svg>
+          Listen on Spotify
+        </a>
         <span class="feedurl" id="feedUrl">feed.xml</span>
         <button class="btn" id="copyFeed" type="button">Copy</button>
         <a class="btn secondary" id="openApp" href="#">Open in app</a>
@@ -942,6 +953,17 @@ ol.order { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
 
     // The cover is only there once the feed has been generated.
     art.addEventListener("error", function () { art.style.display = "none"; });
+
+    // Listening links are written by podcast.py, so the page needs no
+    // rebuild when the show gets listed somewhere new.
+    fetch("links.json", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (links) {
+        if (!links) return;
+        var sp = document.getElementById("spotifyLink");
+        if (links.spotify && sp) { sp.href = links.spotify; sp.hidden = false; }
+      })
+      .catch(function () { /* links are optional */ });
 
     copy.addEventListener("click", function () {
       var done = function () {
