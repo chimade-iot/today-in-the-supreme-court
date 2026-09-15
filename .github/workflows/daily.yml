@@ -8,7 +8,7 @@ on:
   workflow_dispatch:          # lets you build on demand from the Actions tab
     inputs:
       publish_episode:
-        description: "Publish this build as a podcast episode"
+        description: "Also publish this build as a podcast episode"
         type: boolean
         default: true
   push:
@@ -69,13 +69,20 @@ jobs:
       # permanent and free, so the release list becomes the episode
       # archive and the feed can always be regenerated from it.
 
+      # An episode is published ONLY on the schedule, or on a manual run
+      # that asks for one. Pushing a code change must rebuild and redeploy
+      # the site without shipping an edition to everyone's podcast app -
+      # the first version of this condition only excluded manual runs, so
+      # three pushes in one morning became three episodes.
       - name: Package the episode
         id: episode
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.publish_episode }}
+        if: >-
+          ${{ github.event_name == 'schedule'
+              || (github.event_name == 'workflow_dispatch' && inputs.publish_episode) }}
         run: python3 podcast.py episode
 
       - name: Publish the episode release
-        if: ${{ steps.episode.outcome == 'success' }}
+        if: ${{ steps.episode.outcome == 'success' && steps.episode.conclusion == 'success' }}
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.episode.outputs.tag }}

@@ -713,6 +713,14 @@ def main() -> None:
 
     # public/ is what gets deployed, so the player ships alongside the audio.
     shutil.copy2(ROOT / "index.html", PUBLIC / "index.html")
+    # Page assets: the share card link previews fetch, and the favicons.
+    # These must sit next to index.html or the og:image URL 404s and the
+    # preview silently falls back to a bare link.
+    for name in ("social-card.png", "favicon-32.png", "apple-touch-icon.png",
+                 "cover-600.png", "cover.png"):
+        src = ASSETS / name
+        if src.exists():
+            shutil.copy2(src, PUBLIC / name)
     (PUBLIC / ".nojekyll").touch()
 
     print(f"\nDone.  {out_mp3}  ({payload['duration']:.1f}s)")

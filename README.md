@@ -185,6 +185,14 @@ rather than writing an empty feed** — an empty feed would unpublish every
 episode from every subscriber's app. A failed build leaves the previous
 deploy serving, which is the safe outcome.
 
+### An episode is published on the schedule, not on every push
+
+`push` rebuilds and redeploys the site so a code change goes live, but it
+must **not** publish an episode — that would ship an edition to everyone's
+podcast app every time you edit a file. Three pushes in one morning became
+three episodes before this was caught. Episodes are published only by the
+cron schedule, or by a manual run with the box ticked.
+
 ### Before you submit it anywhere
 
 Set `email` in `podcast.json`. Apple Podcasts will not let you claim a

@@ -65,6 +65,78 @@ def draw_tracked(draw, xy, text, font, fill, tracking=0, anchor_centre=True):
     return total
 
 
+# ==========================================================================
+# Social share card and favicons
+# ==========================================================================
+
+def make_social_card() -> Image.Image:
+    """
+    The 1200x630 card link previews use.
+
+    Separate from the podcast cover on purpose: the cover is square because
+    podcast apps demand it, while WhatsApp, LinkedIn and Slack render a
+    landscape card and letterbox a square one into something small and sad.
+    """
+    W, H = 1200, 630
+    img = Image.new("RGB", (W, H), INK)
+
+    # Ground: a little deeper at the right so the type has somewhere to sit.
+    grad = Image.new("L", (W, 1))
+    for x in range(W):
+        grad.putpixel((x, 0), int((x / W) * 90))
+    img = Image.composite(Image.new("RGB", (W, H), INK_DEEP),
+                          img, grad.resize((W, H)))
+
+    # Warm halo behind the lamp, on the left third.
+    cx, cy = 300, H // 2
+    halo = Image.new("RGB", (W, H), (0, 0, 0))
+    ImageDraw.Draw(halo).ellipse([cx - 260, cy - 260, cx + 260, cy + 260],
+                                 fill=(64, 40, 11))
+    halo = halo.filter(ImageFilter.GaussianBlur(120))
+    import numpy as _np
+    img = Image.fromarray(_np.clip(_np.asarray(img).astype(int)
+                                   + _np.asarray(halo).astype(int),
+                                   0, 255).astype("uint8"))
+    d = ImageDraw.Draw(img)
+
+    # Signal arcs, opening toward the type.
+    for i, r in enumerate((120, 172, 224)):
+        d.arc([cx - r, cy - r, cx + r, cy + r], start=205, end=335,
+              fill=LAMP, width=max(2, 6 - i * 2))
+    d.ellipse([cx - 34, cy - 34, cx + 34, cy + 34], fill=LAMP)
+
+    # Type block on the right.
+    eyebrow = load_font(MONO_CANDIDATES, 26)
+    serif = load_font(SERIF_CANDIDATES, 86)
+    footer = load_font(MONO_CANDIDATES, 23)
+
+    tx = 560
+    draw_tracked(d, (tx, 196), "TODAY IN THE", eyebrow, MUTED,
+                 tracking=13, anchor_centre=False)
+    d.text((tx - 4, 240), "SUPREME", font=serif, fill=PAPER)
+    d.text((tx - 4, 338), "COURT", font=serif, fill=PAPER)
+    d.line([(tx, 462), (tx + 300, 462)], fill=(52, 64, 84), width=3)
+    draw_tracked(d, (tx, 486), "FREE DAILY AUDIO BULLETIN", footer, LAMP,
+                 tracking=10, anchor_centre=False)
+    return img
+
+
+def make_favicon() -> Image.Image:
+    """
+    Just the lamp and arcs - at 32 pixels the wordmark is unreadable, so the
+    icon keeps only the part that still reads at that size.
+    """
+    S = 512
+    img = Image.new("RGB", (S, S), INK)
+    d = ImageDraw.Draw(img)
+    cx, cy = S // 2, int(S * 0.56)
+    for i, r in enumerate((150, 205, 260)):
+        d.arc([cx - r, cy - r, cx + r, cy + r], start=203, end=337,
+              fill=LAMP, width=max(6, 20 - i * 5))
+    d.ellipse([cx - 58, cy - 58, cx + 58, cy + 58], fill=LAMP)
+    return img
+
+
 def main() -> None:
     ASSETS.mkdir(parents=True, exist_ok=True)
 
@@ -140,6 +212,22 @@ def main() -> None:
     img.resize((600, 600), Image.LANCZOS).save(ASSETS / "cover-600.png",
                                                "PNG", optimize=True)
     print(f"{ASSETS / 'cover-600.png'}  600x600")
+
+    print("drawing the social share card ...")
+    card = make_social_card()
+    card.save(ASSETS / "social-card.png", "PNG", optimize=True)
+    kb = (ASSETS / "social-card.png").stat().st_size / 1024
+    print(f"{ASSETS / 'social-card.png'}  1200x630  {kb:.0f} KB"
+          + ("  (WhatsApp may skip images over ~300 KB)" if kb > 300 else ""))
+
+    print("drawing favicons ...")
+    fav = make_favicon()
+    fav.resize((180, 180), Image.LANCZOS).save(ASSETS / "apple-touch-icon.png",
+                                               "PNG", optimize=True)
+    fav.resize((32, 32), Image.LANCZOS).save(ASSETS / "favicon-32.png",
+                                             "PNG", optimize=True)
+    print(f"{ASSETS / 'apple-touch-icon.png'}  180x180")
+    print(f"{ASSETS / 'favicon-32.png'}  32x32")
 
 
 if __name__ == "__main__":
