@@ -721,6 +721,18 @@ def main() -> None:
         src = ASSETS / name
         if src.exists():
             shutil.copy2(src, PUBLIC / name)
+
+    # Search Console hands you a token file and then re-fetches it forever to
+    # confirm you still own the site. public/ is rebuilt from an empty
+    # checkout on every CI run, so a file uploaded by hand once would vanish
+    # at the next build and the property would quietly fall unverified weeks
+    # later. Anything named google*.html or BingSiteAuth.xml committed at the
+    # repo root is therefore re-copied on every build.
+    for src in sorted(ROOT.glob("google*.html")) + sorted(
+            ROOT.glob("BingSiteAuth.xml")):
+        shutil.copy2(src, PUBLIC / src.name)
+        print(f"       carried ownership file {src.name}")
+
     (PUBLIC / ".nojekyll").touch()
 
     print(f"\nDone.  {out_mp3}  ({payload['duration']:.1f}s)")
