@@ -163,6 +163,20 @@ def make_episode(cfg: dict) -> dict:
         "published": when.isoformat(),
         "item_count": len(items),
         "sources": data.get("sources", []),
+        # The running order travels with the release so the archive
+        # generator has structured data rather than having to parse the
+        # markdown notes back apart. Editions published before this
+        # existed are recovered by items_from_notes() below.
+        "items": [
+            {
+                "headline": c.get("headline", ""),
+                "credit": c.get("credit", ""),
+                "link": c.get("link", ""),
+                "citation": c.get("citation", ""),
+                "start": round(float(c.get("start", 0)), 1),
+            }
+            for c in items
+        ],
     }
 
     lines = [
@@ -266,6 +280,30 @@ def fetch_releases(cfg: dict, limit: int = 100) -> list[dict]:
     return r.json()
 
 
+# The notes format written by make_episode(), read back. Older editions
+# predate the structured "items" block, and there is no reason to lose
+# fifteen published bulletins over a schema change.
+ITEM_RE = re.compile(
+    r"^\s*(\d+)\.\s+(?P<head>.+?)(?:\s+`(?P<cite>[^`]+)`)?\s*$"
+    r"\n\s+—\s*(?P<credit>[^·\n]+?)"
+    r"(?:\s*·\s*\[read it\]\((?P<link>[^)]+)\))?\s*$",
+    re.M,
+)
+
+
+def items_from_notes(notes: str) -> list[dict]:
+    out = []
+    for m in ITEM_RE.finditer(notes or ""):
+        out.append({
+            "headline": m.group("head").strip(),
+            "credit": (m.group("credit") or "").strip(),
+            "link": (m.group("link") or "").strip(),
+            "citation": (m.group("cite") or "").strip(),
+            "start": 0.0,
+        })
+    return out
+
+
 def parse_release(rel: dict) -> dict | None:
     """Turn one release into an episode, or None if it is not one."""
     tag = rel.get("tag_name", "")
@@ -297,10 +335,13 @@ def parse_release(rel: dict) -> dict | None:
     shown = re.sub(re.escape(META_OPEN) + r".*?" + re.escape(META_CLOSE),
                    "", body, flags=re.S).strip()
 
+    items = meta.get("items") or items_from_notes(shown)
+
     return {
         "tag": tag,
         "title": rel.get("name") or tag,
         "notes": shown,
+        "items": items,
         "url": mp3["browser_download_url"],
         "bytes": mp3.get("size") or meta.get("bytes") or 0,
         "duration": meta.get("duration", 0),

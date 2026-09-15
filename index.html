@@ -521,6 +521,8 @@ ol.order { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
 }
 
 .ghost {
+  text-decoration: none;
+  display: inline-flex; align-items: center;
   background: none; border: 1px solid var(--rule-2); color: var(--ink-2);
   font: inherit; font-size: .75rem;
   padding: .3rem .7rem; border-radius: 3px; cursor: pointer;
@@ -554,6 +556,7 @@ ol.order { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
     <div class="edition">
       <span class="lamp"><span class="bulb"></span><span id="lampText">Off air</span></span>
       <span id="editionStamp">&mdash;</span>
+      <a class="ghost" href="archive/">Archive</a>
       <button class="ghost" id="themeBtn" type="button" aria-label="Switch colour theme">Theme</button>
     </div>
   </header>
@@ -622,6 +625,11 @@ ol.order { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
     <div class="note">
       <h3>Please read this</h3>
       <p><strong>This is not legal advice.</strong> The bulletin is generated automatically from public sources and is not a substitute for the official record. Read the full judgment at the primary source before you rely on any of it. Errors are possible and are ours, not the publishers'.</p>
+    </div>
+    <div class="note">
+      <h3>Every edition</h3>
+      <p>Past bulletins are kept in the <a href="archive/">archive</a>, searchable
+      by case name, neutral citation or publisher.</p>
     </div>
     <div class="note">
       <h3>Credits</h3>

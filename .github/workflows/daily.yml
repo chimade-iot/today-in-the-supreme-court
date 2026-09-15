@@ -106,8 +106,18 @@ jobs:
           python3 podcast.py feed
           python3 podcast.py check
 
+      # Search reaches the lawyers who have never heard of the show, so
+      # every edition gets an indexable page carrying its running order as
+      # text. Runs after the feed, because it reuses the same release list.
+      - name: Build the searchable archive
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 make_archive.py
+
       - name: Show the deployable site
-        run: ls -la public/
+        run: |
+          ls -la public/
+          echo "archive pages: $(find public/archive -name index.html | wc -l)"
 
       - uses: actions/configure-pages@v5
 

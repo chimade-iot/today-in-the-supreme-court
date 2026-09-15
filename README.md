@@ -51,7 +51,8 @@ Useful flags:
 | `podcast.py feed` | mirror recent episodes onto the site and regenerate `feed.xml` |
 | `podcast.py feed --window 60` | host and list 60 editions instead of 30 |
 | `podcast.py check` | validate the feed against the podcast spec |
-| `make_cover.py` | redraw the podcast cover art |
+| `make_cover.py` | redraw the cover, share card and favicons |
+| `make_archive.py` | rebuild the searchable archive and sitemap |
 
 ## Deploying
 
@@ -232,6 +233,49 @@ automatically after that. Submit at
 else — Pocket Casts, Overcast, AntennaPod, Castro — takes the feed URL
 directly with no submission at all.
 
+## The searchable archive
+
+The podcast reaches people who already know about it. Search reaches the
+ones who do not — and lawyers look up case names and neutral citations
+constantly. So every edition gets its own indexable page carrying its
+running order as real text.
+
+```
+make_archive.py ──▶ public/archive/index.html        every edition, filterable
+                    public/archive/<tag>/index.html  one edition, as text
+                    public/sitemap.xml
+                    public/robots.txt
+```
+
+Before this, the running order existed only inside GitHub release notes and
+inside an MP3 — neither of which a search engine can read. Now a lawyer
+searching `2026 INSC 955` or a case name can land on the edition that
+covered it.
+
+The archive index holds every headline from every edition on one page and
+filters them in the browser, so there is no search backend and nothing to
+run. Each term has to match, so `bail 2026` narrows rather than widens, and
+`/archive/?q=arbitration` links straight to a filtered view.
+
+### No new source of truth
+
+`make_archive.py` reads the same GitHub release list the feed does, so
+there is still exactly one place where editions live. Delete a release and
+it disappears from the feed and the archive together on the next build.
+
+Editions published before the running order was recorded in the release
+metadata are recovered by parsing the markdown notes back apart
+(`items_from_notes`), so nothing already published is lost to a schema
+change.
+
+### What each page carries
+
+Per-page canonical URL, Open Graph tags so a shared edition previews
+properly, and `PodcastEpisode` JSON-LD naming the series — so a crawler is
+told what the page is rather than left to guess. Recent editions embed the
+audio directly; older ones, past the hosting window, link to their release
+page instead.
+
 ## Sources, and the copyright line this project draws
 
 Sources sit in two tiers and the pipeline treats them differently on
@@ -368,7 +412,8 @@ sources.py            source adapters and the tier rules
 make_bed.py           synthesises bed.wav, intro.wav, outro.wav
 make_preview.py       folds a build into one shareable HTML file
 podcast.py            episodes, the RSS feed, and feed validation
-make_cover.py         draws the podcast cover art
+make_cover.py         draws the cover, 1200x630 share card and favicons
+make_archive.py       builds the searchable archive, sitemap and robots.txt
 diagnose_feeds.py     shows what each feed contains and how it classifies
 index.html            the player
 sample_items.json     real items, for offline builds
