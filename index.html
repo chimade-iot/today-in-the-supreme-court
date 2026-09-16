@@ -313,9 +313,14 @@ body.playing .vu i { background: var(--lamp); }
   font-variant-numeric: tabular-nums;
 }
 
-/* --- subscribe ------------------------------------------------------ */
-/* Second only to the play button: the site is how you hear today's
-   edition, the feed is how you stop having to remember to. */
+/* --- follow --------------------------------------------------------- */
+/* This block sits ABOVE the player, which is deliberate and was not
+   always so. Someone arriving from a forwarded link listens once and
+   leaves; nothing on a web page makes that a habit, because the page
+   cannot reach them tomorrow. A podcast app can - it downloads each
+   edition and puts it in front of them unasked. So the first decision
+   the page offers is "follow", and today's edition plays right below
+   it, close enough that nobody has to hunt for the play button. */
 
 .subscribe {
   display: grid;
@@ -333,12 +338,18 @@ body.playing .vu i { background: var(--lamp); }
   border: 1px solid var(--rule-2);
   grid-row: span 2;
 }
-.sub-head { display: flex; flex-direction: column; gap: .2rem; margin-bottom: .8rem; }
-.sub-head h2 { border: 0; padding: 0; }
+.sub-head { display: flex; flex-direction: column; gap: .25rem; margin-bottom: .85rem; }
+.sub-head h2 { border: 0; padding: 0; color: var(--ink); }
 .sub-head p {
-  margin: 0; font-size: .938rem; color: var(--ink-2); max-width: 46ch;
+  margin: 0; font-size: .938rem; color: var(--ink-2); max-width: 48ch;
   line-height: 1.5;
 }
+
+/* The listening apps come first and on their own line, so that on a
+   phone they are not competing for width with a monospace feed URL
+   that only a handful of visitors will ever want. */
+.applinks { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .7rem; }
+
 .feedrow { display: flex; flex-wrap: wrap; gap: .5rem; align-items: stretch; }
 .feedurl {
   flex: 1 1 22rem; min-width: 0;
@@ -369,19 +380,44 @@ body.playing .vu i { background: var(--lamp); }
 }
 .btn.spotify svg { width: 1rem; height: 1rem; margin-right: .45rem; fill: currentColor; }
 .btn.spotify:hover { opacity: .9; }
+.btn.apple {
+  background: #7226ad; border-color: #7226ad; color: #fff;
+  font-weight: 500;
+}
+.btn.apple svg { width: 1rem; height: 1rem; margin-right: .45rem; }
+.btn.apple:hover { opacity: .9; }
 .btn.secondary { background: none; color: var(--ink-2); border-color: var(--rule-2); }
 .btn.secondary:hover { color: var(--ink); border-color: var(--ink-3); }
 .btn:focus-visible { outline: 2px solid var(--lamp); outline-offset: 3px; }
+/* .btn sets display:inline-flex, which beats the browser's own rule for
+   [hidden] on specificity - so a button left hidden because podcast.json
+   has no URL for it still drew, as a live-looking button pointing at "#".
+   This was invisible while Spotify was the only one and always populated. */
+.btn[hidden] { display: none !important; }
 .sub-note {
-  grid-column: 2;
   margin: .7rem 0 0; font-size: .813rem; color: var(--ink-3); line-height: 1.5;
 }
 .sub-note a { color: var(--ink-2); }
 
+.otherapps { margin-top: .2rem; }
+.otherapps > summary {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: .75rem; letter-spacing: .06em;
+  color: var(--ink-3); cursor: pointer;
+  padding: .25rem 0; width: fit-content;
+}
+.otherapps > summary:hover { color: var(--ink-2); }
+.otherapps > summary:focus-visible { outline: 2px solid var(--lamp); outline-offset: 3px; }
+.otherapps[open] > summary { margin-bottom: .6rem; }
+
 @media (max-width: 34rem) {
-  .subscribe { grid-template-columns: 1fr; gap: .9rem; }
-  .subscribe img.art { width: 4rem; height: 4rem; grid-row: auto; }
-  .sub-note { grid-column: 1; }
+  /* The art stays beside the text rather than stacking above it: stacking
+     cost about 80px of height, and every pixel spent here is a pixel of
+     the player pushed below the fold. */
+  .subscribe { gap: 0 .85rem; }
+  .subscribe img.art { width: 3.25rem; height: 3.25rem; }
+  .applinks { gap: .45rem; }
+  .applinks .btn { flex: 1 1 100%; justify-content: center; }
 }
 
 /* --- running order ------------------------------------------------- */
@@ -561,6 +597,44 @@ ol.order { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
     </div>
   </header>
 
+  <section class="subscribe" aria-label="Follow the bulletin">
+    <img class="art" id="coverArt" src="cover-600.png" alt="" width="600" height="600">
+    <div>
+      <div class="sub-head">
+        <h2>Listen free, every weekday</h2>
+        <p>Follow in a podcast app and each edition arrives on its own, morning and evening. No charge, no account, no sign-up &mdash; now or later.</p>
+      </div>
+      <div class="applinks">
+        <a class="btn spotify" id="spotifyLink" href="#" target="_blank"
+           rel="noopener noreferrer" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="10.2" fill="currentColor" stroke="none"/><path d="M6.9 9.2c3.5-1 7.4-.6 10.3 1.1" stroke="#1db954"/><path d="M7.6 12.4c2.9-.8 6.1-.5 8.5 1" stroke="#1db954"/><path d="M8.3 15.5c2.3-.6 4.8-.4 6.7.8" stroke="#1db954"/></svg>
+          Follow on Spotify
+        </a>
+        <a class="btn apple" id="appleLink" href="#" target="_blank"
+           rel="noopener noreferrer" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9.2" y="2.9" width="5.6" height="10.2" rx="2.8"/><path d="M5.6 11.3a6.4 6.4 0 0 0 12.8 0"/><path d="M12 17.7v3.4"/></svg>
+          Follow on Apple Podcasts
+        </a>
+      </div>
+      <!-- Folded away by default. The feed URL matters to the handful of
+           people who run Pocket Casts or AntennaPod, and on a phone those
+           three controls were pushing the play button off the screen -
+           which defeats the point of putting this block first. -->
+      <details class="otherapps">
+        <summary>Use another podcast app</summary>
+        <div class="feedrow">
+          <span class="feedurl" id="feedUrl">feed.xml</span>
+          <button class="btn secondary" id="copyFeed" type="button">Copy</button>
+          <a class="btn secondary" id="openApp" href="#">Open in app</a>
+        </div>
+        <p class="sub-note">
+          Pocket Casts, Overcast, AntennaPod and Castro all take that feed
+          URL directly.
+        </p>
+      </details>
+    </div>
+  </section>
+
   <section class="transport" aria-label="Player">
     <div class="controls">
       <button class="play" id="playBtn" type="button" aria-label="Play bulletin">
@@ -580,33 +654,6 @@ ol.order { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
         <span id="tTot">0:00</span>
       </div>
     </div>
-  </section>
-
-  <section class="subscribe" aria-label="Subscribe">
-    <img class="art" id="coverArt" src="cover-600.png" alt="" width="600" height="600">
-    <div>
-      <div class="sub-head">
-        <h2>Subscribe</h2>
-        <p>New edition twice a day, Monday to Saturday. Add the feed to any podcast app and it arrives on its own &mdash; no need to remember this page.</p>
-      </div>
-      <div class="feedrow">
-        <a class="btn spotify" id="spotifyLink" href="#" target="_blank"
-           rel="noopener noreferrer" hidden>
-          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="10.2" fill="currentColor" stroke="none"/><path d="M6.9 9.2c3.5-1 7.4-.6 10.3 1.1" stroke="#1db954"/><path d="M7.6 12.4c2.9-.8 6.1-.5 8.5 1" stroke="#1db954"/><path d="M8.3 15.5c2.3-.6 4.8-.4 6.7.8" stroke="#1db954"/></svg>
-          Listen on Spotify
-        </a>
-        <span class="feedurl" id="feedUrl">feed.xml</span>
-        <button class="btn" id="copyFeed" type="button">Copy</button>
-        <a class="btn secondary" id="openApp" href="#">Open in app</a>
-      </div>
-    </div>
-    <p class="sub-note">
-      Most apps &mdash; Pocket Casts, Overcast, AntennaPod, Castro &mdash; take the feed URL directly.
-      <a href="https://podcastsconnect.apple.com/" target="_blank" rel="noopener noreferrer">Apple Podcasts</a>
-      and
-      <a href="https://podcasters.spotify.com/" target="_blank" rel="noopener noreferrer">Spotify</a>
-      list a show once it has been submitted there, which only needs doing once.
-    </p>
   </section>
 
   <section aria-label="Running order">
@@ -994,8 +1041,12 @@ ol.order { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (links) {
         if (!links) return;
+        // Each button stays hidden until podcast.json actually carries a
+        // URL for it, so a half-listed show never shows a dead button.
         var sp = document.getElementById("spotifyLink");
         if (links.spotify && sp) { sp.href = links.spotify; sp.hidden = false; }
+        var ap = document.getElementById("appleLink");
+        if (links.apple && ap) { ap.href = links.apple; ap.hidden = false; }
       })
       .catch(function () { /* links are optional */ });
 
