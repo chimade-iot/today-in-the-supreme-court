@@ -352,6 +352,89 @@ def parse_release(rel: dict) -> dict | None:
 
 
 # ==========================================================================
+# Show notes
+# ==========================================================================
+# The release body is Markdown, because that is what GitHub renders on the
+# release page. Podcast apps render nothing of the sort: Apple, Spotify and
+# the rest take a small subset of HTML and show anything else as literal
+# characters - which is how "### In this edition" and "[read it](https://...)"
+# ended up on screen verbatim. So the feed is built from the structured item
+# list rather than from the Markdown, and emits real HTML.
+#
+# Apple's supported subset is narrow. <p>, <ol>/<ul>/<li>, <a>, <strong>,
+# <em> and <br> are safe; anything else risks being stripped along with the
+# text inside it, so this deliberately stays plain.
+
+DISCLAIMER = (
+    "Generated automatically from public sources. Every story is credited "
+    "and linked to its publisher. This is not legal advice and is no "
+    "substitute for the official record — read the full judgment at "
+    "the primary source before relying on it."
+)
+
+
+def _h(s) -> str:
+    """Escape text for HTML that will sit inside a CDATA section."""
+    return (str(s or "").replace("&", "&amp;")
+                        .replace("<", "&lt;")
+                        .replace(">", "&gt;"))
+
+
+def _lead(ep: dict) -> str:
+    """'8 stories, 2:29. Reporting by Bar & Bench, Verdictum.'"""
+    items = ep.get("items") or []
+    n = len(items) or ep.get("item_count", 0)
+    lead = f"{n} " + ("story" if n == 1 else "stories")
+    if ep.get("duration"):
+        lead += f", {fmt_duration(ep['duration'])}"
+    lead += "."
+    if ep.get("sources"):
+        lead += " Reporting by " + ", ".join(ep["sources"]) + "."
+    return lead
+
+
+def notes_html(ep: dict) -> str:
+    items = ep.get("items") or []
+    out = [f"<p>{_h(_lead(ep))}</p>"]
+    if items:
+        out.append("<p><strong>In this edition</strong></p>")
+        out.append("<ol>")
+        for c in items:
+            head = _h(c.get("headline", "").strip())
+            cite = (c.get("citation") or "").strip()
+            if cite:
+                head += f" <em>{_h(cite)}</em>"
+            tail = _h((c.get("credit") or "").strip())
+            link = (c.get("link") or "").strip()
+            if link:
+                tail += f' &#183; <a href="{_h(link)}">read it</a>'
+            out.append(f"<li>{head}<br />&#8212; {tail}</li>")
+        out.append("</ol>")
+    out.append(f"<p>{_h(DISCLAIMER)}</p>")
+    return "\n".join(out)
+
+
+def notes_text(ep: dict) -> str:
+    """Plain text, for <itunes:summary>, which takes no markup at all."""
+    lines = [_lead(ep), ""]
+    for i, c in enumerate(ep.get("items") or [], 1):
+        head = (c.get("headline") or "").strip()
+        cite = (c.get("citation") or "").strip()
+        credit = (c.get("credit") or "").strip()
+        link = (c.get("link") or "").strip()
+        line = f"{i}. {head}"
+        if cite:
+            line += f" [{cite}]"
+        if credit:
+            line += f" — {credit}"
+        if link:
+            line += f" ({link})"
+        lines.append(line)
+    lines += ["", DISCLAIMER]
+    return "\n".join(lines)
+
+
+# ==========================================================================
 # The feed
 # ==========================================================================
 
@@ -405,15 +488,16 @@ def build_feed(cfg: dict, episodes: list[dict]) -> str:
 
     body = []
     for ep in episodes:
-        summary = re.sub(r"[#*`\[\]]|\(https?://[^)]+\)", "", ep["notes"])
-        summary = re.sub(r"\n{2,}", "\n\n", summary).strip()
+        html = notes_html(ep)
+        plain = notes_text(ep)
         body.append(f"""    <item>
       <title>{esc(ep['title'])}</title>
       <link>{esc(site)}</link>
       <guid isPermaLink="false">{esc(ep['tag'])}</guid>
       <pubDate>{format_datetime(ep['published'])}</pubDate>
-      <description>{esc(summary)}</description>
-      <content:encoded><![CDATA[{ep['notes']}]]></content:encoded>
+      <description><![CDATA[{html}]]></description>
+      <itunes:summary>{esc(plain)}</itunes:summary>
+      <content:encoded><![CDATA[{html}]]></content:encoded>
       <enclosure url="{esc(ep['url'])}" length="{int(ep['bytes'])}" type="audio/mpeg"/>
       <itunes:duration>{fmt_duration(ep['duration'])}</itunes:duration>
       <itunes:explicit>{esc(cfg['explicit'])}</itunes:explicit>
